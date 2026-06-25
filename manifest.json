@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Dịch & Lưu Từ Vựng",
+  "version": "1.0.0",
+  "description": "Dịch tiếng Anh sang tiếng Việt qua Google Gemini và lưu trữ từ vựng với Firebase.",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.tsx"]
+    }
+  ],
+  "commands": {
+    "trigger_ocr": {
+      "suggested_key": {
+        "default": "Alt+V",
+        "mac": "Alt+V"
+      },
+      "description": "Khoanh vùng Dịch (OCR)"
+    }
+  },
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  }
+}
