@@ -1,4 +1,5 @@
-import { Trash2 } from 'lucide-react';
+import { Trash2, Wand2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 import type { Vocabulary } from '../types';
 import { getPosColor } from '../utils';
 
@@ -8,9 +9,21 @@ interface VocabCardProps {
   isSelectMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
+  onGenerateExample?: (id: string, word: string) => Promise<void>;
 }
 
-export const VocabCard = ({ item, onDelete, isSelectMode, isSelected, onToggleSelect }: VocabCardProps) => {
+export const VocabCard = ({ item, onDelete, isSelectMode, isSelected, onToggleSelect, onGenerateExample }: VocabCardProps) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleGenerate = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onGenerateExample || isGenerating) return;
+    setIsGenerating(true);
+    await onGenerateExample(item.id, item.word);
+    setIsGenerating(false);
+    setIsExpanded(true);
+  };
   // Extract the main meaning nicely
   const mainMeaning = item.meaning.includes('🎯') 
     ? item.meaning.split('\n')[0].replace('🎯 Nghĩa chính: ', '') 
@@ -19,12 +32,17 @@ export const VocabCard = ({ item, onDelete, isSelectMode, isSelected, onToggleSe
   // Extract example sentence nicely if it exists
   let engExample = '';
   let vieExample = '';
+  let hasExample = !!item.example;
   if (item.example) {
     const lines = item.example.split('\n');
     const exLine = lines.find(l => l.startsWith('Ví dụ:'));
     const transLine = lines.find(l => l.startsWith('Dịch:'));
-    if (exLine) engExample = exLine.replace('Ví dụ:', '').trim();
-    if (transLine) vieExample = transLine.replace('Dịch:', '').trim();
+    if (exLine) {
+      engExample = exLine.replace('Ví dụ:', '').trim();
+      if (transLine) vieExample = transLine.replace('Dịch:', '').trim();
+    } else {
+      engExample = item.example;
+    }
   }
 
   return (
@@ -61,17 +79,44 @@ export const VocabCard = ({ item, onDelete, isSelectMode, isSelected, onToggleSe
         )}
       </div>
       
-      <div className="text-[14px] text-slate-600 font-medium mb-2 leading-snug">
+      <div className={`text-[14px] text-slate-600 font-medium leading-snug ${hasExample && !isExpanded ? '' : 'mb-2'}`}>
         {mainMeaning}
       </div>
       
-      {engExample && (
-        <div className="bg-slate-50/80 p-2.5 rounded-lg border border-slate-100 text-sm">
-          <p className="text-slate-700 font-semibold italic mb-0.5">"{engExample}"</p>
-          {vieExample && (
-            <p className="text-slate-500 text-[12px]">{vieExample}</p>
+      {hasExample ? (
+        <div className="mt-1">
+          <div className="flex justify-end">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+              className="flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-indigo-600 transition-colors py-1"
+            >
+              {isExpanded ? 'Thu gọn ví dụ' : 'Xem ví dụ'}
+              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+          </div>
+          
+          {isExpanded && (
+            <div className="mt-1 bg-slate-50/80 p-2.5 rounded-lg border border-slate-100 text-sm">
+              <p className="text-slate-700 font-semibold italic mb-0.5">{engExample.startsWith('"') ? engExample : `"${engExample}"`}</p>
+              {vieExample && (
+                <p className="text-slate-500 text-[12px]">{vieExample}</p>
+              )}
+            </div>
           )}
         </div>
+      ) : (
+        !isSelectMode && (
+          <div className="flex justify-end mt-1">
+            <button 
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-indigo-600 bg-indigo-50/50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors border border-indigo-100/50 disabled:opacity-50"
+            >
+              {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+              {isGenerating ? 'Đang tạo ví dụ...' : 'Tạo ví dụ bằng AI'}
+            </button>
+          </div>
+        )
       )}
     </div>
   );

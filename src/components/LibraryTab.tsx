@@ -40,6 +40,19 @@ export const LibraryTab = ({ vocabList, onDelete, onBulkDelete }: LibraryTabProp
     }
   };
 
+  const handleGenerateExample = async (id: string, word: string) => {
+    try {
+      const { generateExample } = await import('../api/gemini');
+      const example = await generateExample(word);
+      if (example && !example.startsWith("Đã xảy ra lỗi")) {
+        const newList = vocabList.map(item => item.id === id ? { ...item, example } : item);
+        chrome.storage.local.set({ vocabulary: newList });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const filteredList = useMemo(() => {
     let list = vocabList.filter(item => 
       item.word.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -132,6 +145,7 @@ export const LibraryTab = ({ vocabList, onDelete, onBulkDelete }: LibraryTabProp
                     isSelectMode={isSelectMode}
                     isSelected={selectedIds.has(item.id)}
                     onToggleSelect={handleToggleSelect}
+                    onGenerateExample={handleGenerateExample}
                   />
                 ))}
               </div>
@@ -141,7 +155,7 @@ export const LibraryTab = ({ vocabList, onDelete, onBulkDelete }: LibraryTabProp
       </div>
 
       {isSelectMode && (
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-100 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex justify-between items-center z-20 transition-all duration-300">
+        <div className="sticky bottom-0 -mx-4 -mb-4 mt-4 p-3 bg-white border-t border-slate-100 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] flex justify-between items-center z-20 transition-all duration-300">
           <span className="text-[13px] font-semibold text-slate-600 ml-1">Đã chọn: <span className="text-indigo-600">{selectedIds.size}</span></span>
           <div className="flex gap-2">
             <button
