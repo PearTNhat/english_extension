@@ -2,15 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// TODO: Thay thế bằng thông tin cấu hình Firebase thực tế của bạn
 const firebaseConfig = {
-  apiKey: "AIzaSyAK8M1wcEHV6U3lecrzKMSW1WT2zdKHV6U",
-  authDomain: "learn-english-c4f49.firebaseapp.com",
-  projectId: "learn-english-c4f49",
-  storageBucket: "learn-english-c4f49.firebasestorage.app",
-  messagingSenderId: "302158908821",
-  appId: "1:302158908821:web:0acc28bc8c543f1b0dfa9c",
-  measurementId: "G-8DYBWQPBTM"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
