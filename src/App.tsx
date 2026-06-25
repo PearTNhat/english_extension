@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { LibraryTab } from './components/LibraryTab';
 import { PracticeGame } from './components/PracticeGame';
+import { GuideTab } from './components/GuideTab';
 import type { Vocabulary } from './types';
 
 function App() {
   const [vocabList, setVocabList] = useState<Vocabulary[]>([]);
-  const [currentTab, setCurrentTab] = useState<'library' | 'practice'>('library');
+  const [currentTab, setCurrentTab] = useState<'library' | 'practice' | 'guide'>('library');
 
   useEffect(() => {
     // Lấy dữ liệu lần đầu
@@ -54,8 +55,10 @@ function App() {
             onDelete={handleDelete} 
             onBulkDelete={handleBulkDelete} 
           />
-        ) : (
+        ) : currentTab === 'practice' ? (
           <PracticeGame vocabList={vocabList} />
+        ) : (
+          <GuideTab />
         )}
       </main>
     </div>

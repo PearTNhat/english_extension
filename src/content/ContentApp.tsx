@@ -112,8 +112,38 @@ export const ContentApp = () => {
       }, 10);
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Shortcut cho OCR: Alt + V
+      if (e.altKey && e.key.toLowerCase() === 'v') {
+        setIsCropping(true);
+        setShowPopover(false);
+        setShowIcon(false);
+        setSelectedRange(null);
+        return;
+      }
+
+      // Shortcut cho dịch nhanh: Shift
+      if (e.key === 'Shift') {
+        const selection = window.getSelection();
+        const text = selection?.toString().trim();
+        
+        if (text && text.length > 0 && selection?.rangeCount) {
+          const range = selection.getRangeAt(0);
+          setSelectedRange(range);
+          setAnchorPos(null);
+          setSelectedText(text);
+          setShowIcon(false);
+          setShowPopover(true);
+        }
+      }
+    };
+
     document.addEventListener('mouseup', handleMouseUp);
-    return () => document.removeEventListener('mouseup', handleMouseUp);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [showPopover, iconRefs, popoverRefs]);
 
   const handleIconClick = () => {
