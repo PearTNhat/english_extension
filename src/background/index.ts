@@ -1,21 +1,4 @@
-import { initializeApp } from "firebase/app";
 
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
-
-// Initialize Firebase in background script
-const firebaseConfig = {
-  apiKey: "AIzaSyAK8M1wcEHV6U3lecrzKMSW1WT2zdKHV6U",
-  authDomain: "learn-english-c4f49.firebaseapp.com",
-  projectId: "learn-english-c4f49",
-  storageBucket: "learn-english-c4f49.firebasestorage.app",
-  messagingSenderId: "302158908821",
-  appId: "1:302158908821:web:0acc28bc8c543f1b0dfa9c",
-  measurementId: "G-8DYBWQPBTM"
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
 
 /// <reference types="chrome"/>
 
@@ -55,21 +38,41 @@ chrome.runtime.onMessage.addListener((request: any, _sender: any, sendResponse: 
   }
 
   if (request.action === 'save_vocabulary') {
-    // Save to Firestore anonymously
-    addDoc(collection(db, 'vocabulary'), {
-      userId: 'anonymous',
-      word: request.word,
-      meaning: request.meaning,
-      pos: request.pos || '',
-      example: request.example || '',
-      createdAt: serverTimestamp()
-    })
-    .then(() => {
-      sendResponse({ success: true });
-    })
-    .catch((error) => {
-      console.error("Error saving to Firestore", error);
-      sendResponse({ success: false, error: error.message });
+    // Save to chrome.storage.local
+    chrome.storage.local.get(['vocabulary'], (result) => {
+      const vocabList = (result.vocabulary as any[]) || [];
+      
+      // Kiểm tra trùng lặp từ vựng (chỉ tính là trùng nếu cùng TỪ và cùng LOẠI TỪ)
+      const isDuplicate = vocabList.some(v => 
+        v.word.toLowerCase() === request.word.toLowerCase() && 
+        v.pos === (request.pos || '')
+      );
+      if (isDuplicate) {
+        sendResponse({ success: true, message: 'already_saved' });
+        return;
+      }
+
+      const newWord = {
+        id: Date.now().toString() + Math.random().toString(36).substring(7),
+        word: request.word,
+        meaning: request.meaning,
+        pos: request.pos || '',
+        example: request.example || '',
+        createdAt: Date.now(),
+        correctCount: 0,
+        wrongCount: 0
+      };
+      
+      vocabList.unshift(newWord); // Thêm vào đầu danh sách
+      
+      chrome.storage.local.set({ vocabulary: vocabList }, () => {
+        if (chrome.runtime.lastError) {
+          console.error("Error saving to local storage:", chrome.runtime.lastError);
+          sendResponse({ success: false, error: chrome.runtime.lastError.message });
+        } else {
+          sendResponse({ success: true });
+        }
+      });
     });
 
     return true; // Keep message channel open for async response

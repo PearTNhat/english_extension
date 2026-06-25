@@ -6,21 +6,21 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
 
 const POS_MAP: Record<string, string> = {
-  "noun": "Danh từ",
-  "verb": "Động từ",
-  "adjective": "Tính từ",
-  "adverb": "Trạng từ",
-  "pronoun": "Đại từ",
-  "preposition": "Giới từ",
-  "conjunction": "Liên từ",
-  "interjection": "Thán từ",
-  "abbreviation": "Viết tắt",
-  "phrase": "Cụm từ",
-  "prefix": "Tiền tố",
-  "suffix": "Hậu tố"
+  "noun": "Noun",
+  "verb": "Verb",
+  "adjective": "Adjective",
+  "adverb": "Adverb",
+  "pronoun": "Pronoun",
+  "preposition": "Preposition",
+  "conjunction": "Conjunction",
+  "interjection": "Interjection",
+  "abbreviation": "Abbreviation",
+  "phrase": "Phrase",
+  "prefix": "Prefix",
+  "suffix": "Suffix"
 };
 
-export async function translateText(text: string): Promise<string> {
+export async function translateText(text: string): Promise<{text: string, pos: string}> {
   try {
     // dt=t (translation), dt=bd (dictionary/part of speech)
     const googleTranslateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&dt=bd&q=${encodeURIComponent(text)}`;
@@ -32,7 +32,11 @@ export async function translateText(text: string): Promise<string> {
     
     // Lấy chi tiết từ loại nếu có
     let dictResult = "";
+    let primaryPos = "";
     if (data[1] && data[1].length > 0) {
+      const firstPos = data[1][0][0] ? data[1][0][0].toLowerCase() : "";
+      primaryPos = POS_MAP[firstPos] || data[1][0][0] || "";
+      
       dictResult = data[1].map((posGroup: any) => {
         const pos = posGroup[0] ? posGroup[0].toLowerCase() : "";
         const translatedPos = POS_MAP[pos] || posGroup[0]; // Dịch sang tiếng Việt
@@ -41,14 +45,15 @@ export async function translateText(text: string): Promise<string> {
       }).join("\n");
     }
 
+    let resultText = translation;
     if (dictResult) {
-      return `🎯 Nghĩa chính: ${translation}\n\n📚 Chi tiết các loại từ:\n${dictResult}`;
+      resultText = `🎯 Nghĩa chính: ${translation}\n\n📚 Chi tiết các loại từ:\n${dictResult}`;
     }
     
-    return translation;
+    return { text: resultText, pos: primaryPos };
   } catch (error) {
     console.error("Translation Error:", error);
-    return "Đã xảy ra lỗi khi dịch. Vui lòng thử lại sau.";
+    return { text: "Đã xảy ra lỗi khi dịch. Vui lòng thử lại sau.", pos: "" };
   }
 }
 
@@ -87,5 +92,61 @@ export async function extractTextFromImage(base64Image: string): Promise<string>
   } catch (error) {
     console.error("Gemini OCR Error:", error);
     return "";
+  }
+}
+
+export interface QuizItem {
+  wordId: string;
+  options: string[];
+}
+
+export async function generateQuizBatch(words: {id: string, word: string, meaning: string}[]): Promise<QuizItem[]> {
+  try {
+    const wordData = words.map(w => ({ id: w.id, word: w.word, meaning: w.meaning }));
+    
+    const prompt = `Bạn đang tạo các bài trắc nghiệm từ vựng tiếng Anh.
+Dưới đây là danh sách các từ vựng và nghĩa đúng của chúng (định dạng JSON):
+${JSON.stringify(wordData, null, 2)}
+
+Nhiệm vụ: Với MỖI từ vựng, tạo ra 3 nghĩa tiếng Việt SAI nhưng có vẻ hợp lý để làm đáp án gây nhiễu. Sau đó trộn chung với nghĩa đúng để ra 4 đáp án.
+Yêu cầu CỰC KỲ QUAN TRỌNG: Trả về kết quả CHỈ là một mảng JSON (Array) có cấu trúc chính xác như sau:
+[
+  {
+    "id": "id của từ vựng",
+    "options": ["nghĩa sai 1", "nghĩa đúng", "nghĩa sai 2", "nghĩa sai 3"]
+  }
+]
+Không giải thích, không thêm chữ nào ngoài JSON hợp lệ. Các options phải được xáo trộn ngẫu nhiên.`;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text().trim();
+    
+    const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(jsonStr);
+    
+    if (Array.isArray(parsed)) {
+      return parsed.map((p: any) => ({
+        wordId: p.id,
+        options: Array.isArray(p.options) && p.options.length === 4 
+          ? p.options 
+          : [
+              words.find(w => w.id === p.id)?.meaning || "Đúng", 
+              "Sai 1", "Sai 2", "Sai 3"
+            ].sort(() => Math.random() - 0.5)
+      }));
+    }
+    throw new Error("Invalid format");
+  } catch (error) {
+    console.error("Gemini Quiz Batch Error:", error);
+    // Fallback: tự sinh ngẫu nhiên
+    return words.map(w => ({
+      wordId: w.id,
+      options: [
+        w.meaning,
+        "Một loại trái cây",
+        "Hành động chạy nhảy",
+        "Đồ vật trong nhà"
+      ].sort(() => Math.random() - 0.5)
+    }));
   }
 }

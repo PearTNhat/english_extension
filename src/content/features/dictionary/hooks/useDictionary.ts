@@ -3,6 +3,7 @@ import { translateText, generateExample } from '../../../../api/gemini';
 
 export function useDictionary(text: string) {
   const [translation, setTranslation] = useState('');
+  const [pos, setPos] = useState('');
   const [example, setExample] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [isGeneratingExample, setIsGeneratingExample] = useState(false);
@@ -11,16 +12,17 @@ export function useDictionary(text: string) {
   useEffect(() => {
     if (!text) return;
     let isMounted = true;
-    
+
     const fetchTranslation = async () => {
       setIsTranslating(true);
       const result = await translateText(text);
       if (isMounted) {
-        setTranslation(result);
+        setTranslation(result.text);
+        setPos(result.pos || '');
         setIsTranslating(false);
       }
     };
-    
+
     fetchTranslation();
     return () => { isMounted = false; };
   }, [text]);
@@ -35,18 +37,30 @@ export function useDictionary(text: string) {
 
   const handleSave = () => {
     setIsSaved(true);
-    /// <reference types="chrome"/>
-    chrome.runtime.sendMessage({
-      action: 'save_vocabulary',
-      word: text,
-      meaning: translation
-    }, (response: any) => {
-      if (!response || !response.success) {
-        console.error("Save failed:", response?.error);
-        alert("Lưu thất bại. Bạn đã đăng nhập ở Popup chưa?");
-        setIsSaved(false);
-      }
-    });
+    try {
+      chrome.runtime.sendMessage({
+        action: 'save_vocabulary',
+        word: text,
+        meaning: translation,
+        pos: pos
+      }, (response: any) => {
+        if (chrome.runtime.lastError) {
+          console.error("Lỗi:", chrome.runtime.lastError);
+          alert("Extension vừa được cập nhật. Vui lòng tải lại trang web này (F5) để tiếp tục lưu từ vựng!");
+          setIsSaved(false);
+          return;
+        }
+        if (!response || !response.success) {
+          console.error("Save failed:", response?.error);
+          alert("Lưu thất bại. Vui lòng thử lại.");
+          setIsSaved(false);
+        }
+      });
+    } catch (error) {
+      console.error("Context Error:", error);
+      alert("Extension vừa được cập nhật. Vui lòng tải lại trang web này (F5) để kết nối lại!");
+      setIsSaved(false);
+    }
   };
 
   const handlePlayAudio = () => {
