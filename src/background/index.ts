@@ -78,3 +78,13 @@ chrome.runtime.onMessage.addListener((request: any, _sender: any, sendResponse: 
     return true; // Keep message channel open for async response
   }
 });
+
+chrome.runtime.onMessageExternal.addListener((request: any, _sender: any, sendResponse: any) => {
+  if (request.type === 'FIREBASE_AUTH_CREDENTIAL' && request.idToken) {
+    // Lưu token nhận được từ web app vào storage
+    chrome.storage.local.set({ pendingFirebaseIdToken: request.idToken }, () => {
+      sendResponse({ success: true });
+    });
+    return true; // Keep message channel open for async response
+  }
+});

@@ -10,7 +10,8 @@
     "storage",
     "activeTab",
     "scripting",
-    "contextMenus"
+    "contextMenus",
+    "identity"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -21,6 +22,20 @@
       "js": ["src/content/index.tsx"]
     }
   ],
+  "oauth2": {
+    "client_id": "302158908821-5l4b3ef4v7kb8qfq3v3u09i3uhlqgbua.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
+  "externally_connectable": {
+    "matches": [
+      "https://checkin-out-gamma.vercel.app/*",
+      "http://localhost:*/*",
+      "http://127.0.0.1:*/*"
+    ]
+  },
   "commands": {
     "trigger_ocr": {
       "suggested_key": {
