@@ -22,20 +22,24 @@ export const FloatingIcon = ({ setFloatingRef, floatingStyles, onClick }: Floati
       style={{ 
         ...floatingStyles,
         zIndex: 2147483647, 
-        backgroundColor: '#2563eb',
-        color: 'white',
-        borderRadius: '50%',
-        width: '36px',
-        height: '36px',
+        backgroundColor: 'transparent',
+        borderRadius: '8px',
+        width: '26px',
+        height: '26px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         cursor: 'pointer',
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        overflow: 'hidden'
       }}
     >
-      <span style={{ fontSize: '18px', lineHeight: 1 }}>🌍</span>
+      <img 
+        src={chrome.runtime.getURL('logo.png')} 
+        alt="Translate" 
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+      />
     </div>
   );
 };

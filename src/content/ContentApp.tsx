@@ -13,6 +13,23 @@ export const ContentApp = () => {
   const [showPopover, setShowPopover] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [useShiftToTranslate, setUseShiftToTranslate] = useState(true);
+
+  useEffect(() => {
+    chrome.storage.local.get(['useShiftToTranslate'], (result) => {
+      if (result.useShiftToTranslate !== undefined) {
+        setUseShiftToTranslate(result.useShiftToTranslate as boolean);
+      }
+    });
+
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.useShiftToTranslate) {
+        setUseShiftToTranslate(changes.useShiftToTranslate.newValue as boolean);
+      }
+    };
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
+  }, []);
 
   // Floating UI configuration for Icon
   const { refs: iconRefs, floatingStyles: iconStyles } = useFloating({
@@ -123,7 +140,7 @@ export const ContentApp = () => {
       }
 
       // Shortcut cho dịch nhanh: Shift
-      if (e.key === 'Shift') {
+      if (e.key === 'Shift' && useShiftToTranslate) {
         const selection = window.getSelection();
         const text = selection?.toString().trim();
         
@@ -144,7 +161,7 @@ export const ContentApp = () => {
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showPopover, iconRefs, popoverRefs]);
+  }, [showPopover, iconRefs, popoverRefs, useShiftToTranslate]);
 
   const handleIconClick = () => {
     setShowIcon(false);

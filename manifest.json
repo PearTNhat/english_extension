@@ -4,7 +4,13 @@
   "version": "1.0.0",
   "description": "Dịch tiếng Anh sang tiếng Việt qua Google Gemini và lưu trữ từ vựng với Firebase.",
   "action": {
-    "default_popup": "index.html"
+    "default_popup": "index.html",
+    "default_icon": "logo.png"
+  },
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
   },
   "permissions": [
     "storage",
@@ -20,6 +26,12 @@
     {
       "matches": ["<all_urls>"],
       "js": ["src/content/index.tsx"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["logo.png"],
+      "matches": ["<all_urls>"]
     }
   ],
   "oauth2": {

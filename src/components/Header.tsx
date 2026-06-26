@@ -13,12 +13,9 @@ export const Header = ({ vocabCount, currentTab, onTabChange, user }: HeaderProp
     <header className="bg-white/90 backdrop-blur-md border-b border-white shadow-sm flex flex-col sticky top-0 z-10">
       <div className="p-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white p-2 rounded-xl shadow-blue-200 shadow-lg">
-            <Library size={20} />
-          </div>
           <div>
-            <h1 className="font-bold text-[17px] text-slate-800 leading-tight">Từ vựng của tôi</h1>
-            <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{vocabCount} từ đã lưu</p>
+            <h1 className="font-black text-[24px] bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent leading-none tracking-tight pb-0.5">Sun</h1>
+            <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">{vocabCount} từ đã lưu</p>
           </div>
         </div>
         <div className="flex items-center gap-1">

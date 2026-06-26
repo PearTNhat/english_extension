@@ -1,8 +1,43 @@
-import { BookOpen, MousePointer2, Keyboard, Image as ImageIcon, BookmarkPlus, Gamepad2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { BookOpen, MousePointer2, Keyboard, Image as ImageIcon, BookmarkPlus, Gamepad2, Settings } from 'lucide-react';
 
 export const GuideTab = () => {
+  const [useShift, setUseShift] = useState(true);
+
+  useEffect(() => {
+    chrome.storage.local.get(['useShiftToTranslate'], (result) => {
+      if (result.useShiftToTranslate !== undefined) {
+        setUseShift(result.useShiftToTranslate as boolean);
+      }
+    });
+  }, []);
+
+  const toggleShift = () => {
+    const newValue = !useShift;
+    setUseShift(newValue);
+    chrome.storage.local.set({ useShiftToTranslate: newValue });
+  };
+
   return (
     <div className="space-y-4">
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <h2 className="text-[17px] font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <Settings size={18} className="text-slate-500" />
+          Cài đặt
+        </h2>
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-[15px] font-semibold text-slate-700">Dịch nhanh bằng phím Shift</h3>
+            <p className="text-[13px] text-slate-500 mt-0.5">Bôi đen và nhấn Shift để dịch ngay lập tức.</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer ml-4">
+            <input type="checkbox" className="sr-only peer" checked={useShift} onChange={toggleShift} />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+          </label>
+        </div>
+      </div>
+
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
         <h2 className="text-[17px] font-bold text-slate-800 mb-3 flex items-center gap-2">
           <BookOpen size={18} className="text-blue-500" />
